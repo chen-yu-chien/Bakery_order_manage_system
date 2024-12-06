@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bread List</title>
+    <style>
+        body { 
+            background-color: rgb(248, 233, 206);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .bread {
+            margin: 20px;
+            border: 1px solid #DDA0DD;
+            border-radius: 5px;
+            padding: 20px;
+            display: inline-block;
+        }
+        .bread img {
+            width: 150px;  /* 圖片寬度 */
+            height: 150px; /* 圖片高度 */
+            object-fit: cover; /* 保持比例裁剪 */
+            border-radius: 5px; /* 圓角 */
+            margin-bottom: 10px;
+        }
+        input {
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid #DDA0DD;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgb(226, 195, 138); /* 按鈕顏色 */
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #b47715; /* 懸停顏色 */
+        }
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #header h1 {
+            flex-grow: 1; /* 使標題佔據所有可用空間，並讓它居中 */
+            text-align: center; /* 使標題文本居中 */
+            margin: 0; /* 去除標題的默認外邊距 */
+        }
+        #back-button {
+            margin: 0 auto; /* Center the back button */
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <button onclick="location.href='order.html'">返回訂單管理</button>
+        <h1>Bread List</h1>
+        <button onclick="location.href='index.html'">登出</button>
+    </div>
+    <input type="text" id="search" placeholder="搜尋麵包...">
+    <div id="breads-container"></div>
+    <button onclick="addBread()">新增</button>
+    
+    <script>
+        // 在这里调用后端 API 获取面包列表并显示
+        async function fetchBreadList() {
+            const response = await fetch('http://localhost:5000/bread/bread');    //http://172.20.10.6:5000/bread/bread
+            const breads = await response.json();
+            console.log(breads);  // 確認是否成功獲取資料
+            const breadList = document.getElementById('breads-container'); // 这里应该是 breads-container
+            breadList.innerHTML = ''; // 清空之前的內容
+            
+            breads.forEach(bread => {
+                breadList.innerHTML += `
+                    <div class="bread" data-id="${bread.id}" data-name="${bread.name}">
+                        <h2 contenteditable="true">${bread.name}</h2>
+                        <img src="${bread.image_url}" alt="${bread.name} 的圖片" class="bread-img">
+                        <p>價格: <span contenteditable="true">${bread.price}</span>元</p>
+                        <p>描述: <span contenteditable="true">${bread.description}</span></p>
+                        <p>庫存量: <span contenteditable="true">${bread.stock}</span></p>
+                        <button onclick="reChanges(this)">儲存</button>
+                        <button onclick="deChanges(this)">刪除</button>
+                    </div>
+                `;
+            });
+        }
+
+        let isNewBread = true;  // 用于标识是否为新面包
+        let currentBreadId;     // 当前面包的 ID
+
+        function addBread() {
+            const container = document.getElementById('breads-container');
+            // 创建新的面包元素并加入 DOM
+            const newBreadDiv = document.createElement('div');
+            newBreadDiv.classList.add('bread');
+            newBreadDiv.innerHTML = `
+                <h2 contenteditable="true">新麵包名稱</h2>
+                <input type="file" accept="image/*" id="image-upload" onchange="uploadImage(this)">
+                <p>價格: <span contenteditable="true">0</span>元</p>
+                <p>描述: <span contenteditable="true">麵包描述</span></p>
+                <p>庫存量: <span contenteditable="true">0</span></p>
+                <button onclick="saveChanges(this)">儲存</button>
+                <button onclick="deChanges(this)">刪除</button>
+            `;
+            // <img id="preview" src="" alt="預覽圖片" style="display:none;">
+            // // 给新面包一个唯一的 ID
+            // currentBreadId = Date.now();  // 使用时间戳作为 ID
+            // newBreadDiv.setAttribute('data-id', currentBreadId);
+            //新的元素添加到最上方
+            container.appendChild(newBreadDiv);
+        }
+
+        async function uploadImage(input) {
+            const file = input.files[0];
+            const preview = input.parentElement.querySelector('#preview');
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 發送圖片到後端
+            const response = await fetch('http://localhost:5000/bread/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            console.log(result);
+
+            if (result.success) {
+                alert('圖片上傳成功');
+                // preview.src = result.url;
+                // preview.style.display = 'block';
+            } else {
+                alert('圖片上傳失敗');
+            }
+        }
+
+        function saveChanges(button) {
+            const breadDiv = button.parentElement;
+            const name = breadDiv.querySelector('h2').innerText;
+            const price = breadDiv.querySelector('p:nth-of-type(1) span').innerText;
+            const description = breadDiv.querySelector('p:nth-of-type(2) span').innerText;
+            const stock = breadDiv.querySelector('p:nth-of-type(3) span').innerText;
+            console.log(name)
+            console.log(price)
+            console.log(description)
+            console.log(stock)
+             // 如果是新面包则新增，否则更新
+            if (isNewBread) {
+                // 发送新增请求
+                fetch('http://localhost:5000/bread/bread', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        price: price,
+                        description: description,
+                        stock: stock
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    isNewBread = false;  // 变为已有的面包
+                    // 可以根据返回的 ID 更新当前面包 ID（可选）
+                    // currentBreadId = data.id;  // 如果后端返回了新创建面包的 ID
+                    fetchBreadList();
+                })
+                .catch(error => console.error('Error:', error));
+            } else {
+                // 发送更新请求
+                fetch('http://localhost:5000/bread/bread', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: breadDiv.getAttribute('data-id'),  // 使用面包的 ID
+                        name: name,
+                        price: price,
+                        description: description,
+                        stock: stock
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    fetchBreadList();
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+
+        function reChanges(button) {
+            const breadDiv = button.parentElement;
+            const id = breadDiv.getAttribute('data-id');
+            const name = breadDiv.querySelector('h2').innerText;
+            const price = breadDiv.querySelector('p:nth-of-type(1) span').innerText;
+            const description = breadDiv.querySelector('p:nth-of-type(2) span').innerText;
+            const stock = breadDiv.querySelector('p:nth-of-type(3) span').innerText;
+            console.log(id);
+            console.log(name)
+            console.log(price)
+            console.log(description)
+            console.log(stock)
+            body = JSON.stringify({
+                    id: id,
+                    name: name,
+                    price: price,
+                    description: description,
+                    stock: stock
+                })
+            console.log(body)
+            // 发送到后端进行数据库更新
+            fetch('http://localhost:5000/bread/bread', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: body
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message))
+            .catch(error => console.error('Error:', error));
+        }
+
+        function deChanges(button) {
+            const breadDiv = button.parentElement;
+            const id = breadDiv.getAttribute('data-id');
+            // 发送到后端进行数据库更新
+            fetch('http://localhost:5000/bread/bread', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: id })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message); // 显示删除消息
+                breadDiv.remove(); // 从页面上删除该面包项
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // 搜索框监听输入
+        document.getElementById('search').addEventListener('input', function () {
+            const searchValue = this.value.toLowerCase();
+            const breads = document.querySelectorAll('.bread');
+
+            breads.forEach(bread => {
+                const breadName = bread.querySelector('h2').innerText.toLowerCase();
+                if (breadName.includes(searchValue)) {
+                    bread.style.display = 'inline-block';  // 显示匹配项
+                } else {
+                    bread.style.display = 'none';  // 隐藏不匹配项
+                }
+            });
+
+             // 如果搜索框为空，恢复所有面包项的显示
+            if (!searchValue) {
+                breads.forEach(bread => {
+                    bread.style.display = 'inline-block';  // 确保格式正常显示
+                });
+            }
+        });
+        
+        window.onload = function() {
+            fetchBreadList();  // 確保頁面載入後才抓取資料
+        };
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+# backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finalbread-backend  #final-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finalbread-backend
+  template:
+    metadata:
+      labels:
+        app: finalbread-backend
+    spec:
+      containers:
+      - name: backend
+        image: backend-backend:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+        env: # 後端環境變數
+        - name: DATABASE_URL
+          value: "mysql://root:local_0944133@finalbread-mysql/bakery" # 替換為你的 MySQL 資訊
+---
+# MySQL Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finalbread-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finalbread-mysql
+  template:
+    metadata:
+      labels:
+        app: finalbread-mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0 # backend-db:latest # mysql:5.7 # 使用官方 MySQL 映像
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "local_0944133" # 資料庫 root 密碼
+        - name: MYSQL_DATABASE
+          value: "bakery" # 預設資料庫名稱
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql # 資料庫資料保存路徑
+      volumes:
+      - name: mysql-data
+        emptyDir: {}
+---
+# # PersistentVolume 用於存儲數據
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: minio-pv
+# spec:
+#   capacity:
+#     storage: 10Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   hostPath:
+#     path: /data/minio # 你的主機上的目錄路徑
+# ---
+# # PersistentVolumeClaim 請求存儲
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: minio-pvc
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 10Gi
+# ---
+# # MinIO Deployment
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: minio-deployment
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: minio
+#   template:
+#     metadata:
+#       labels:
+#         app: minio
+#     spec:
+#       containers:
+#       - name: minio
+#         image: minio/minio:latest
+#         args:
+#         - server
+#         - /data
+#         env:
+#         - name: MINIO_ROOT_USER
+#           value: "minioadmin" # 替換為你的 MinIO 使用者名稱
+#         - name: MINIO_ROOT_PASSWORD
+#           value: "minioadmin" # 替換為你的 MinIO 密碼
+#         ports:
+#         - containerPort: 9000
+#         volumeMounts:
+#         - name: minio-data
+#           mountPath: /data
+#       volumes:
+#       - name: minio-data
+#         persistentVolumeClaim:
+#           claimName: minio-pvc
+# MinIO Deployment(no pv and pvc)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+      - name: minio
+        image: minio/minio:latest
+        args:
+        - server
+        - /data
+        env:
+        - name: MINIO_ROOT_USER
+          value: "minioadmin" # 替換為你的 MinIO 使用者名稱
+        - name: MINIO_ROOT_PASSWORD
+          value: "minioadmin" # 替換為你的 MinIO 密碼
+        ports:
+        - containerPort: 9000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: finalbread-backend-service
+spec:
+  selector:
+    app: finalbread-backend # backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000  #80
+      nodePort: 32000 # 指定 NodePort，範圍是 30000-32767 #31449
+  type: NodePort  #ClusterIP
+---
+# MySQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: finalbread-mysql
+spec:
+  selector:
+    app: finalbread-mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP
+---
+# MinIO Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-service
+spec:
+  selector:
+    app: minio
+  ports:
+  - protocol: TCP
+    port: 9000
+    targetPort: 9000
+  type: NodePort # 或 LoadBalancer 視需求調整

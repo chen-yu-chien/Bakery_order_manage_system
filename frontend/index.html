@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MJ's Bakery</title>
+    <style>
+        body { 
+            background-color: rgb(248, 233, 206);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0; 
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgb(226, 195, 138); /* 按鈕顏色 */
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #b47715; /* 懸停顏色 */
+        }
+    </style>
+</head>
+<body>
+    <h1>🍞YM's Bakery🥖</h1>
+    <p id="motivational-quote">Loading motivational quote...</p>
+    <button onclick="location.href='login.html'">進入系统</button>
+
+    <script>
+        // 随机显示一则加油话语
+        const quotes = [
+            "Bake the world a better place!",
+            "Life is what you bake of it.",
+            "Good things come to those who bake.",
+            "Bakers gonna bake!",
+            "You knead the dough to make it rise.",
+            "Flour power!",
+            "The secret ingredient is always love.",
+            "Whisk it and see!",
+            "Rise and shine with fresh bread!",
+            "Bread is the staff of life."
+        ];
+        document.getElementById("motivational-quote").innerText = quotes[Math.floor(Math.random() * quotes.length)];
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+Flask
+Flask-MySQLdb
+mysql-connector-python
+mysqlclient
+Flask-Cors
+requests
+minio
+werkzeug

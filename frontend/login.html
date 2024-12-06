@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入頁面</title>
+    <style>
+        body { 
+            background-color: rgb(248, 233, 206);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid rgb(226, 195, 138);
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgb(226, 195, 138);
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #b47715;
+        }
+    </style>
+</head>
+<body>
+    <form onsubmit="handleLogin(event)">
+        <h2>登入系統</h2>
+        <input type="text" id="username" placeholder="帳號" required>
+        <input type="password" id="password" placeholder="密碼" required>
+        <button type="submit">登入</button>
+    </form>
+
+    <script>
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // 在這裡進行後端驗證
+            if (username && password) {
+                // // 假設驗證成功，跳轉到 Bread List
+                // window.location.href = 'bread_list.html';
+                // 发送新增请求
+                fetch('http://localhost:5000/login/login', {    //http://localhost:5000/login/login
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if (data.success === true) {
+                        window.location.href = 'bread_list.html';
+                    } else {
+                        alert('帳號或密碼錯誤');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            } else {
+                alert('請輸入有效的帳號和密碼');
+            }
+        }
+    </script>
+</body>
+</html>

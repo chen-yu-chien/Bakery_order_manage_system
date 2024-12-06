@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management</title>
+    <style>
+        body {
+            background-color: rgb(248, 233, 206);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #header h1 {
+            flex-grow: 1; /* 使標題佔據所有可用空間，並讓它居中 */
+            text-align: center; /* 使標題文本居中 */
+            margin: 0; /* 去除標題的默認外邊距 */
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgb(226, 195, 138); /* 按鈕顏色 */
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #b47715; /* 懸停顏色 */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            border: 1px solid #DDA0DD;
+            padding: 10px;
+            text-align: left;
+        }
+        table th {
+            background-color: rgb(226, 195, 138);
+            color: white;
+        }
+        input {
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid #DDA0DD;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <button onclick="location.href='bread_list.html'">返回麵包列表</button>
+        <h1>訂單管理</h1>
+        <button onclick="location.href='index.html'">登出</button>
+    </div>
+    <div>
+        <label for="orderdate">訂單日期:</label>
+        <input type="date" id="orderdate">
+    </div>
+    <div>
+        <label for="breadname">麵包名稱:</label>
+        <input type="text" id="breadname" placeholder="輸入麵包名稱">
+    </div>
+    <div>
+        <label for="pickup">是否取貨:</label>
+        <select id="pickup">
+            <option value="">全部</option>
+            <option value="-1">已取貨</option>
+            <option value="0">自取</option>
+            <option value="1">宅配</option>
+        </select>
+    </div>
+    <button onclick="searchOrders()">搜尋</button>    
+    <table>
+        <thead>
+            <tr>
+                <th>顧客名稱</th>
+                <th>電話</th>
+                <th>地址</th>
+                <th>訂購日期</th>
+                <th>麵包名稱</th>
+                <th>數量</th>
+                <th>配送方式</th>
+                <th>訂單修改</th>
+            </tr>
+        </thead>
+        <tbody id="orders-container">
+            <!-- 動態插入資料 -->
+        </tbody>
+    </table>
+
+    <script>
+        // 獲取訂單資料
+        async function fetchOrderList() {
+            const response = await fetch('http://localhost:5000/orders/orders');
+            const orders = await response.json();
+            const container = document.getElementById('orders-container');
+            container.innerHTML = '';
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td contenteditable="true">${order.customerName}</td>
+                    <td contenteditable="true">${order.customerTelephone}</td>
+                    <td contenteditable="true">${order.customerAddress}</td>
+                    <td contenteditable="true">${order.orderdate}</td>
+                    <td contenteditable="true">${order.breadName}</td>
+                    <td contenteditable="true">${order.quantity}</td>
+                    <td contenteditable="true">${order.pickup}</td>
+                    <td>
+                        <button onclick="saveOrderChanges(this, ${order.id})">儲存</button>
+                    </td>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // 儲存修改
+        function saveOrderChanges(button, orderId) {
+            const row = button.parentElement.parentElement;
+            const pickupValue = row.cells[6].innerText.trim();
+            
+            let pickup;
+            if (pickupValue === '已取貨') {
+                pickup = -1; // 已取貨
+            } else if (pickupValue === '自取') {
+                pickup = 0; // 自取
+            } else {
+                pickup = 1; // 宅配
+            }
+            const updatedOrder = {
+                id: orderId,
+                pickup: pickup, //row.cells[6].innerText
+            };
+            fetch('http://localhost:5000/orders/orders', {  //http://localhost:5000/orders/orders
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedOrder),
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message))
+            .catch(error => console.error('Error:', error));
+        }
+
+        // 搜尋訂單
+        async function searchOrders() {
+            // 從輸入框獲取搜尋條件的值
+            const orderdate = document.getElementById('orderdate').value; // 訂單日期
+            const breadname = document.getElementById('breadname').value; // 麵包名稱
+            const pickup = document.getElementById('pickup').value;       // 是否已取貨
+
+            // 發送搜尋請求到後端
+            const query = new URLSearchParams({
+                orderdate: orderdate.trim() || '',  // 去除空白，空值時傳空字串
+                breadname: breadname.trim() || '',
+                pickup: pickup.trim() || '',
+            });
+
+            try {
+                const response = await fetch(`http://localhost:5000/orders/orders?${query.toString()}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const orders = await response.json();
+
+                // 更新頁面上的訂單表格
+                const container = document.getElementById('orders-container');
+                container.innerHTML = ''; // 清空原有表格內容
+
+                orders.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td contenteditable="true">${order.customerName}</td>
+                        <td contenteditable="true">${order.customerTelephone}</td>
+                        <td contenteditable="true">${order.customerAddress}</td>
+                        <td contenteditable="true">${order.orderdate}</td>
+                        <td contenteditable="true">${order.breadName}</td>
+                        <td contenteditable="true">${order.quantity}</td>
+                        <td contenteditable="true">${order.pickup}</td>
+                        <td>
+                                <button onclick="saveOrderChanges(this, ${order.id})">儲存</button>
+                        </td>
+                    `;
+                    container.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // 初始化
+        window.onload = fetchOrderList;
+    </script>
+</body>
+</html>
