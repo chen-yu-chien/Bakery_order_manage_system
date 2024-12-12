@@ -9,3 +9,7 @@ user1 username(accesskey): bakery
 user1 password(secretkey): bakerybakery
 
 js 連線教學: https://ithelp.ithome.com.tw/articles/10306493?sc=rss.iron
+
+powershell指令
+1. cd D:
+2. .\minio.exe server D:\minio\ --console-address :9001
