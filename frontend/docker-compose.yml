@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend # 指定 Dockerfile 的位置
+      # dockerfile: Dockerfile # 確認 Dockerfile 檔名正確
+    ports:
+      - "80:80" # 將容器的 80 埠映射到主機的 80 埠
+    volumes:
+      - ./frontend:/usr/share/nginx/html # 本地的 frontend 資料夾掛載到容器中
+    networks:
+      - app_network # 定義應用服務的網路
+
+networks:
+  app_network:
+    driver: bridge

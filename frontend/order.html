@@ -101,7 +101,7 @@
     <script>
         // 獲取訂單資料
         async function fetchOrderList() {
-            const response = await fetch('http://localhost:5000/orders/orders');
+            const response = await fetch('http://172.20.10.6:32000/orders/orders');    // http://localhost:5000/orders/orders    // http://172.20.10.6:5000/orders/orders
             const orders = await response.json();
             const container = document.getElementById('orders-container');
             container.innerHTML = '';
@@ -140,7 +140,7 @@
                 id: orderId,
                 pickup: pickup, //row.cells[6].innerText
             };
-            fetch('http://localhost:5000/orders/orders', {  //http://localhost:5000/orders/orders
+            fetch('http://172.20.10.6:32000/orders/orders', {  //http://localhost:5000/orders/orders
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedOrder),
@@ -165,7 +165,7 @@
             });
 
             try {
-                const response = await fetch(`http://localhost:5000/orders/orders?${query.toString()}`);
+                const response = await fetch(`http://172.20.10.6:32000/orders/orders?${query.toString()}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }

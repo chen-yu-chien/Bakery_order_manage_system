@@ -72,7 +72,7 @@
     <script>
         // 在这里调用后端 API 获取面包列表并显示
         async function fetchBreadList() {
-            const response = await fetch('http://localhost:5000/bread/bread');    //http://172.20.10.6:5000/bread/bread
+            const response = await fetch('http://172.20.10.6:32000/bread/bread');    //http://172.20.10.6:5000/bread/bread //http://localhost:5000/bread/bread
             const breads = await response.json();
             console.log(breads);  // 確認是否成功獲取資料
             const breadList = document.getElementById('breads-container'); // 这里应该是 breads-container
@@ -125,7 +125,7 @@
             formData.append('file', file);
 
             // 發送圖片到後端
-            const response = await fetch('http://localhost:5000/bread/upload', {
+            const response = await fetch('http://172.20.10.6:32000/bread/upload', {
                 method: 'POST',
                 body: formData
             });
@@ -155,7 +155,7 @@
              // 如果是新面包则新增，否则更新
             if (isNewBread) {
                 // 发送新增请求
-                fetch('http://localhost:5000/bread/bread', {
+                fetch('http://172.20.10.6:32000/bread/bread', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -178,7 +178,7 @@
                 .catch(error => console.error('Error:', error));
             } else {
                 // 发送更新请求
-                fetch('http://localhost:5000/bread/bread', {
+                fetch('http://172.20.10.6:32000/bread/bread', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -221,7 +221,7 @@
                 })
             console.log(body)
             // 发送到后端进行数据库更新
-            fetch('http://localhost:5000/bread/bread', {
+            fetch('http://172.20.10.6:32000/bread/bread', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -237,7 +237,7 @@
             const breadDiv = button.parentElement;
             const id = breadDiv.getAttribute('data-id');
             // 发送到后端进行数据库更新
-            fetch('http://localhost:5000/bread/bread', {
+            fetch('http://172.20.10.6:32000/bread/bread', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
