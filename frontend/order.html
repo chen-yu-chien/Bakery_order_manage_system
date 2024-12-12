@@ -196,8 +196,50 @@
             }
         }
 
+        async function checkStockAgainstOrders() {
+            // 假設您可以從以下 API 獲取訂單資料和麵包庫存
+            const ordersResponse = await fetch('http://172.20.10.6:32000/orders/orders'); // 訂單資料 API
+            const orders = await ordersResponse.json();
+
+            const breadsResponse = await fetch('http://172.20.10.6:32000/bread/bread'); // 麵包庫存 API
+            const breads = await breadsResponse.json();
+
+            // 整合訂單中每種麵包的需求量
+            const orderCounts = {};
+            
+            breads.forEach(bread => {
+                orderCounts[bread.name] = 0; // 初始化每種麵包的需求量為 0
+            });
+
+            orders.forEach(order => {
+                if (order.pickup != '已取貨') {
+                    console.log(order);
+                    orderCounts[order.breadName] += order.quantity;
+                }
+            });
+
+            console.log(orderCounts);
+
+            alertstr = "";
+
+            // 比較需求量與庫存量
+            breads.forEach(bread => {
+                const currentOrderCount = orderCounts[bread.name] || 0; // 當前訂單需求量
+                const threshold = bread.stock * 0.8; // 設定臨界值 (80%)
+
+                if (currentOrderCount >= threshold) {
+                    alertstr += `"${bread.name}" 的需求量 (${currentOrderCount}) 接近庫存量 (${bread.stock})！\n`;
+                }
+            });
+
+            alert('注意:\n\n' + alertstr + '\n請進行備貨。');
+        }
+
         // 初始化
-        window.onload = fetchOrderList;
+        window.onload = function() {
+            fetchOrderList();  // 確保頁面載入後才抓取資料
+            checkStockAgainstOrders(); // 新增功能：檢查庫存與訂單
+        };
     </script>
 </body>
 </html>
