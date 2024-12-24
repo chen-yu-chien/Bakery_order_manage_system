@@ -22,6 +22,13 @@ spec:
         env: # 後端環境變數
         - name: DATABASE_URL
           value: "mysql://root:local_0944133@finalbread-mysql/bakery" # 替換為你的 MySQL 資訊
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
 ---
 # MySQL Deployment
 apiVersion: apps/v1
@@ -144,6 +151,7 @@ spec:
         ports:
         - containerPort: 9000
 ---
+# backend Service
 apiVersion: v1
 kind: Service
 metadata:
